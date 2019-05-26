@@ -1,28 +1,64 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-void MainWindow::atualizarDados()
-{
-    double mediaTurma = 0;
-    for(Aluno a : turma){
-        mediaTurma += a.getMedia();
-    }
-    mediaTurma /= turma.size();
-    ui->mediaTurma->setText(QString::number(mediaTurma));
-
-    Aluno *maior = std::max_element(turma.begin(),turma.end(),[](Aluno a, Aluno b){return a.getMedia()<b.getMedia();});
-    Aluno *menor = std::min_element(turma.begin(),turma.end(),[](Aluno a, Aluno b){return a.getMedia()<b.getMedia();});
-
-    ui->menorMedia->setText(QString::number(maior->getMedia()));
-    ui->maiorMedia->setText(QString::number(menor->getMedia()));
-
-}
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    connect(ui->actionSalvar,SIGNAL(triggered()),this,SLOT(salvar()));
+    connect(ui->actionCarregar,SIGNAL(triggered()),this,SLOT(carregar()));
+}
+
+void MainWindow::atualizarDados()
+{
+    int mediaTurma = turma.getMedia();
+    int menorMedia = turma.getMenorMedia();
+    int maiorMedia = turma.getMaiorMedia();
+
+    ui->mediaTurma->setText(QString::number(mediaTurma));
+    ui->menorMedia->setText(QString::number(menorMedia));
+    ui->maiorMedia->setText(QString::number(maiorMedia));
+
+}
+
+void MainWindow::atualizarTabela()
+{
+    ui->tabelaDados->clearContents();
+    for(int i=0; i<turma.size();i++){
+        inserirAlunoNaTabela(turma[i],i);
+    }
+
+}
+
+void MainWindow::inserirAlunoNaTabela(Aluno a, int linha)
+{
+    ui->tabelaDados->setItem(linha,0,new QTableWidgetItem(a.getNome()));
+    ui->tabelaDados->setItem(linha,1,new QTableWidgetItem(QString::number(a.getMedia())));
+    ui->tabelaDados->setItem(linha,2,new QTableWidgetItem(a.getStatus()));
+}
+
+void MainWindow::salvar()
+{
+    QString nomeArquivo = QFileDialog::getSaveFileName(this,
+                                                       "Lista de aluno",
+                                                       "",
+                                                       "CSV(*.csv)");
+    turma.salvarTurma(nomeArquivo);
+}
+
+void MainWindow::carregar()
+{
+    QString nomeArquivo = QFileDialog::getOpenFileName(this,
+                                                       "Lista de aluno",
+                                                       "",
+                                                       "CSV(*.csv)");
+    turma.carregarTurma(nomeArquivo);
+    for(int i=0;i<turma.size();i++){
+        ui->tabelaDados->insertRow(i);
+        inserirAlunoNaTabela(turma[i],i);
+    }
 }
 
 MainWindow::~MainWindow()
@@ -32,16 +68,28 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_btnInserir_clicked()
 {
+    Aluno aluno;
     aluno.setNome(ui->entradaNome->text());
     aluno.setMedia(ui->entradaMedia->text().toDouble());
 
     int linha = ui->tabelaDados->rowCount();
     ui->tabelaDados->insertRow(linha);
-    ui->tabelaDados->setItem(linha,0,new QTableWidgetItem(aluno.getNome()));
-    ui->tabelaDados->setItem(linha,1,new QTableWidgetItem(QString::number(aluno.getMedia())));
-    ui->tabelaDados->setItem(linha,2,new QTableWidgetItem(aluno.getStatus()));
+    inserirAlunoNaTabela(aluno,linha);
 
-    turma.push_back(aluno);
+
+    turma.inserirAluno(aluno);
     atualizarDados();
 
+}
+
+void MainWindow::on_btnOrdenarNome_clicked()
+{
+    turma.ordenarPorNome();
+    atualizarTabela();
+}
+
+void MainWindow::on_btnOrdenarMedia_clicked()
+{
+    turma.ordenarPorMedia();
+    atualizarTabela();
 }

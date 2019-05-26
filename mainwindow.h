@@ -3,8 +3,10 @@
 
 #include <QMainWindow>
 #include <QVector>
+#include <QDebug>
+#include <QFileDialog>
+#include "turma.h"
 #include "aluno.h"
-#include <algorithm>
 
 namespace Ui {
 class MainWindow;
@@ -14,10 +16,10 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 private:
-    Aluno aluno;
-    QVector<Aluno> turma;
+    Turma turma;
     void atualizarDados();
-
+    void atualizarTabela();
+    void inserirAlunoNaTabela(Aluno a, int linha);
 
 public:
     explicit MainWindow(QWidget *parent = 0);
@@ -25,6 +27,14 @@ public:
 
 private slots:
     void on_btnInserir_clicked();
+
+    void on_btnOrdenarNome_clicked();
+
+    void on_btnOrdenarMedia_clicked();
+
+    void salvar();
+
+    void carregar();
 
 private:
     Ui::MainWindow *ui;
